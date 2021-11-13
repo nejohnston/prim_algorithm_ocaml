@@ -1,9 +1,3 @@
-module type OrderedType = sig
-    type t
-    val compare : t -> t -> int
-end
-
-module type S = sig
 (* abstract graph type *)
 type t
 (* abstract edge type *)
@@ -37,6 +31,3 @@ val neighbours : int -> t -> (int * int) list
     it returns the special value inf if there is no edge between v1 & v2 *)
 val weight : int -> int -> t -> int
 
-end
-
-module Make(Ord : OrderedType) : S with type edge as Ord.t

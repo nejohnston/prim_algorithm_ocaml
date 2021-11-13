@@ -1,41 +1,41 @@
-module type OrderedType =
-sig
-    type t
-    val compare : t -> t -> int
-end
+module G = Map.Make(Int)
 
-module type S = sig
-type t
-type edge
+type edge = Edge of int * int * int
+type t = (int G.t) G.t
 
-val inf : int
-val make_edge : int * int * int -> edge
-val empty : t
-val add_edge : edge -> t -> t
-val vertices :  t -> int list
-val edges : t -> (int * int * int) list
-val neighbours : int -> t -> (int * int) list
-val weight : int -> int -> t -> int
-end
+let inf = -1
 
-module Ugraph = struct
-    type edge = (int * int * int)
-    type t = Empty | Graph of t list
-    
-    let empty = Empty
-    let make_edge v1 v2 w = v1 * v2 * w
-    let add_edge edge t = 
-        match t with
-        | Empty -> [edge]
-        | t -> edge::[t]
-    let vertices t =
-        let rec vertices' t acc =
-            match t with
-            | Empty -> acc
-            | (v1, _, _) :: t -> if List.find v1 acc then vertices' t acc else vertices' t (acc::v1)
-            | (_, v2, _) :: t -> if List.find v2 acc then vertices' t acc else vertices' t (acc::v2)
+let empty = G.empty
+
+let make_edge (v1, v2, w) = Edge(v1, v2, w)
+
+let add_edge (Edge(v1, v2, w)) g =
+    match (G.find_opt v1 g) with
+    | None when g = empty -> G.empty |> (G.add v1 (G.empty |> G.add v2 w))
+    | None -> g |> (G.add v1 (G.empty |> G.add v2 w))
+    | Some x ->
+        match (G.find_opt v2 x) with
+        | None -> g |> (G.add v1 (G.empty |> G.add v2 w))
+        | _ -> g
+
+(*vertices need to be mapped to an array, along with the arrays that they have
+    we also need to check if they're already in the accumulator*)
+let vertices g =
+    List.rev (G.fold (fun k _ acc ->
+        (k::acc)) g [])
+
+(*fold over outer map, enter fun, fold over inner map, finnd v2, add to acc*)
+let neighbours v g =
+    (G.fold (fun v1 v acc -> G.fold (fun v2 w acc' -> (v2, w)::acc') v acc) g [])
+
+(*fold over outer map, enter fun, fold over inner map, create edge, add to acc*)
+let edges g =
+    (G.fold (fun v1 v acc -> G.fold (fun v2 w acc' -> (v1, v2, w)::acc') v acc) g [])
+
+let weight v1 v2 g =
+    try
+        let w = G.find v1 g
         in
-        vertices' t []
-
-end
-
+        G.find v2 w
+    with
+        Not_found -> inf
