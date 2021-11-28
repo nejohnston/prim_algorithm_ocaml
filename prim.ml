@@ -67,20 +67,18 @@ let read_file file_name =
 (*        if (List.length graph_edges <> 0) then prim' new_vs new_tree (List.tl vs_edges) else new_tree*)
 (* need to get all edges that are in edges parameter, where v1 is in vs, v2 is not in vs, then get smallest weight*)
 
-let rec prim' vs tree graph_edges g_len =
+let rec prim' vs tree graph_edges =
         let t' = List.filter (fun (v1, v2, _) -> (List.mem v1 vs) && not (List.mem v2 vs)) graph_edges
         in
-        let (v1_new, v2_new, w_new) = List.hd (List.sort (fun (_, _, w) (_, _, w') -> Int.compare w w') t')
-        in
-        let new_vs = v2_new::vs
-        in
-        let new_tree = (v1_new, v2_new, w_new)::tree
-        in
-        let new_edges = List.filter
-            (fun (v1, v2, w) ->
-            ((v1, v2, w) <> (v1_new, v2_new, w_new)) && ((v2, v1, w) <> (v2_new, v1_new, w_new))) graph_edges
-        in
-        if (List.length new_edges <> 0) then prim' new_vs new_tree new_edges g_len else new_tree
+        if List.length t' = 0 then tree
+        else
+            let (v1_new, v2_new, w_new) = List.hd (List.sort (fun (_, _, w) (_, _, w') -> Int.compare w w') t')
+            in
+            let new_edges = List.filter
+                (fun (v1, v2, w) ->
+                ((v1, v2, w) <> (v1_new, v2_new, w_new)) && ((v2, v1, w) <> (v2_new, v1_new, w_new))) graph_edges
+            in
+            prim' (v2_new::vs) (v1_new, v2_new, w_new)::tree new_edges
 
 
 let prim v g =
@@ -99,12 +97,12 @@ let weights list =
     in
     aux list 0
 
-let () =
-    let g = read_file "h.txt"
-    in
-    let vs = prim 1 g
-    in
-    Stdio.printf "minimum weight: %d\n" (weights(vs));
-    rec_print vs;
+(*let () =*)
+(*    let g = read_file Sys.argv.(1)*)
+(*    in*)
+(*    let vs = prim 1 g*)
+(*    in*)
+(*    Stdio.printf "minimum weight: %d\n" (weights(vs));*)
+(*    rec_print vs;*)
 
 
